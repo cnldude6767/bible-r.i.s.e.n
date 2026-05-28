@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R.I.S.E.N. Quest — Empty Tomb Detectives</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #1a1f3a 0%, #2d1b4e 50%, #1a1f3a 100%);
+    min-height: 100vh;
+    color: #f5f3ee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .game-container {
+    max-width: 720px;
+    width: 100%;
+    background: rgba(20, 25, 50, 0.85);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  }
+  h1 {
+    text-align: center;
+    font-size: 32px;
+    letter-spacing: 2px;
+    background: linear-gradient(90deg, #ffd700, #ff9d4d, #ffd700);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    text-align: center;
+    color: #c5b8e0;
+    font-size: 14px;
+    letter-spacing: 3px;
+    margin-bottom: 24px;
+    text-transform: uppercase;
+  }
+  .letters-display {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .letter-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px 6px;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+  .letter-card.earned {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.25), rgba(255, 157, 77, 0.25));
+    border-color: rgba(255, 215, 0, 0.6);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+  }
+  .letter-card .big-letter {
+    font-size: 24px;
+    font-weight: 700;
+    color: #ffd700;
+    margin-bottom: 2px;
+  }
+  .letter-card .word {
+    font-size: 10px;
+    color: #c5b8e0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .letter-card.earned .word { color: #ffd700; }
+
+  .stats-bar {
+    display: flex;
+    justify-content: space-between;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+  .stat-label { color: #c5b8e0; }
+  .stat-value { color: #ffd700; font-weight: 600; margin-left: 6px; }
+
+  .badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+  }
+  .badge-R { background: rgba(255, 92, 92, 0.2); color: #ff8a8a; border: 1px solid rgba(255, 92, 92, 0.4); }
+  .badge-I { background: rgba(255, 165, 0, 0.2); color: #ffc266; border: 1px solid rgba(255, 165, 0, 0.4); }
+  .badge-S { background: rgba(70, 220, 170, 0.2); color: #7eebc4; border: 1px solid rgba(70, 220, 170, 0.4); }
+  .badge-E { background: rgba(100, 180, 255, 0.2); color: #9dc8ff; border: 1px solid rgba(100, 180, 255, 0.4); }
+  .badge-N { background: rgba(180, 130, 255, 0.2); color: #c9a5ff; border: 1px solid rgba(180, 130, 255, 0.4); }
+
+  .question {
+    font-size: 17px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    font-weight: 500;
+  }
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .option-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #f5f3ee;
+    padding: 14px 18px;
+    border-radius: 10px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 15px;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    line-height: 1.4;
+  }
+  .option-btn:hover:not(:disabled) {
+    background: rgba(255, 215, 0, 0.1);
+    border-color: rgba(255, 215, 0, 0.4);
+    transform: translateY(-1px);
+  }
+  .option-btn:disabled { cursor: default; opacity: 0.8; }
+  .option-btn.correct {
+    background: rgba(46, 204, 113, 0.25);
+    border-color: #2ecc71;
+    color: #7fffaa;
+  }
+  .option-btn.wrong {
+    background: rgba(231, 76, 60, 0.25);
+    border-color: #e74c3c;
+    color: #ff9999;
+  }
+
+  .feedback {
+    background: rgba(255, 215, 0, 0.1);
+    border-left: 4px solid #ffd700;
+    padding: 14px 16px;
+    border-radius: 8px;
+    margin-top: 14px;
+    font-size: 14px;
+    line-height: 1.6;
+    display: none;
+  }
+  .feedback.show { display: block; animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .verse {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(255, 215, 0, 0.3);
+    font-style: italic;
+    color: #ffd700;
+    font-size: 13px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #ffd700, #ff9d4d);
+    color: #1a1f3a;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 14px;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255, 215, 0, 0.3); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .start-intro {
+    background: rgba(0, 0, 0, 0.25);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    line-height: 1.7;
+    font-size: 15px;
+  }
+  .start-intro p { margin-bottom: 10px; }
+  .start-intro p:last-child { margin-bottom: 0; }
+  .start-intro strong { color: #ffd700; }
+
+  .difficulty-toggle {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .diff-btn {
+    flex: 1;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #f5f3ee;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    transition: all 0.2s ease;
+  }
+  .diff-btn.active {
+    background: rgba(255, 215, 0, 0.2);
+    border-color: #ffd700;
+    color: #ffd700;
+    font-weight: 600;
+  }
+
+  .end-card {
+    text-align: center;
+    padding: 30px 20px;
+  }
+  .trophy { font-size: 64px; margin-bottom: 12px; }
+  .end-title {
+    font-size: 28px;
+    color: #ffd700;
+    margin-bottom: 8px;
+  }
+  .end-sub {
+    color: #c5b8e0;
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+  .final-score-box {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+  .final-score-num {
+    font-size: 48px;
+    font-weight: 700;
+    color: #ffd700;
+  }
+  .final-rank {
+    font-size: 16px;
+    color: #c5b8e0;
+    margin-top: 8px;
+    letter-spacing: 1px;
+  }
+
+  .scripture-box {
+    background: rgba(255, 215, 0, 0.08);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-style: italic;
+    color: #ffd700;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .progress-bar {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ffd700, #ff9d4d);
+    transition: width 0.4s ease;
+  }
+
+  .timer-bar {
+    font-size: 12px;
+    color: #c5b8e0;
+    text-align: right;
+    margin-bottom: 8px;
+  }
+
+  .footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 11px;
+    color: #8a7fa3;
+    letter-spacing: 1px;
+  }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 24px; }
+    .question { font-size: 16px; }
+    .letter-card .big-letter { font-size: 20px; }
+    .letter-card .word { font-size: 9px; }
+  }
+</style>
+</head>
+<body>
+<div class="game-container">
+  <h1>R.I.S.E.N. QUEST</h1>
+  <div class="subtitle">Empty Tomb Detectives</div>
+
+  <!-- START SCREEN -->
+  <div id="start-screen">
+    <div class="letters-display">
+      <div class="letter-card"><div class="big-letter">R</div><div class="word">Rise</div></div>
+      <div class="letter-card"><div class="big-letter">I</div><div class="word">Inability</div></div>
+      <div class="letter-card"><div class="big-letter">S</div><div class="word">Shift</div></div>
+      <div class="letter-card"><div class="big-letter">E</div><div class="word">Evidence</div></div>
+      <div class="letter-card"><div class="big-letter">N</div><div class="word">No theory</div></div>
+    </div>
+
+    <div class="start-intro">
+      <p>🕵️ You're a detective in ancient Jerusalem investigating the biggest mystery in history: <strong>what really happened to Jesus' body?</strong></p>
+      <p>Answer questions across all 5 letters of <strong>R.I.S.E.N.</strong> to collect evidence cards and rank up from Rookie all the way to <strong>Case Closer</strong>.</p>
+    </div>
+
+    <div class="scripture-box">
+      "Always be prepared to give an answer to everyone who asks you to give the reason for the hope that you have." — 1 Peter 3:15
+    </div>
+
+    <p style="text-align: center; color: #c5b8e0; margin-bottom: 10px; font-size: 13px;">CHOOSE YOUR DIFFICULTY</p>
+    <div class="difficulty-toggle">
+      <button class="diff-btn active" data-diff="easy" onclick="setDifficulty('easy')">🟢 Rookie</button>
+      <button class="diff-btn" data-diff="hard" onclick="setDifficulty('hard')">🔴 Expert</button>
+    </div>
+
+    <button class="btn-primary" onclick="startGame()">▶ Start the case</button>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="game-screen" style="display: none;">
+    <div class="stats-bar">
+      <div><span class="stat-label">Rank:</span><span class="stat-value" id="rank">Rookie</span></div>
+      <div><span class="stat-label">Score:</span><span class="stat-value" id="score">0</span></div>
+      <div><span class="stat-label">Q:</span><span class="stat-value" id="q-num">1/15</span></div>
+    </div>
+
+    <div class="progress-bar"><div class="progress-fill" id="progress" style="width: 0%;"></div></div>
+
+    <div class="letters-display" id="evidence-display"></div>
+
+    <div id="question-area">
+      <div class="badge" id="letter-badge"></div>
+      <div class="question" id="question-text"></div>
+      <div class="options" id="options"></div>
+      <div class="feedback" id="feedback"></div>
+      <button class="btn-primary" id="next-btn" style="display: none;" onclick="nextQuestion()">Next →</button>
+    </div>
+  </div>
+
+  <!-- END SCREEN -->
+  <div id="end-screen" style="display: none;">
+    <div class="end-card">
+      <div class="trophy" id="trophy-emoji">🏆</div>
+      <div class="end-title" id="end-title">Case closed!</div>
+      <div class="end-sub" id="end-subtitle"></div>
+      <div class="final-score-box">
+        <div class="final-score-num" id="final-score">0/15</div>
+        <div class="final-rank" id="final-rank"></div>
+      </div>
+      <div class="scripture-box" id="end-verse"></div>
+      <button class="btn-primary" onclick="resetGame()">▶ Play again</button>
+    </div>
+  </div>
+
+  <div class="footer">R.I.S.E.N. QUEST · A Bible study game</div>
+</div>
+
+<script>
+const easyQuestions = [
+  // R - Rise of Christianity
+  { letter: 'R', name: 'Rise of Christianity',
+    q: 'Christianity exploded in Jerusalem just WEEKS after Jesus died. Why is this a HUGE problem for skeptics who say the resurrection never happened?',
+    options: ['Jerusalem was too small for a new religion', 'Anyone who didn\'t believe could have just shown Jesus\' dead body to shut it all down', 'The disciples were hiding in caves', 'Nobody really lived in Jerusalem'],
+    correct: 1, why: 'Jerusalem is the WORST place to lie about a resurrection. The tomb was right there. If the body was still in it, the movement dies in a day.',
+    verse: 'Acts 2:41 — "About three thousand were added to their number that day."' },
+  { letter: 'R', name: 'Rise of Christianity',
+    q: 'How quickly did the church start growing rapidly in Jerusalem?',
+    options: ['About 100 years later', 'About 50 years later', 'Within weeks of the resurrection (at Pentecost)', 'Hundreds of years later'],
+    correct: 2, why: 'Acts 2 records thousands believing within weeks — in the exact city where it all happened.',
+    verse: 'Acts 2:41' },
+  { letter: 'R', name: 'Rise of Christianity',
+    q: 'TRUE OR FALSE: If Jesus\' body was still in the tomb, the Jewish and Roman leaders could have easily ended Christianity by showing the body to everyone.',
+    options: ['True', 'False'], correct: 0,
+    why: 'They had every reason to produce the body — but they never did. The best explanation? There was no body to find.',
+    verse: 'Matthew 28:11-15 — even the leaders had to invent a cover story.' },
+
+  // I - Inability (persecution and death)
+  { letter: 'I', name: 'Inability to deny',
+    q: 'The disciples were beaten, jailed, and killed for saying Jesus rose. Why does this make their story MORE believable?',
+    options: ['People don\'t usually die for something they KNOW is a lie', 'They were forced to say it at sword-point', 'They wanted to be famous', 'They didn\'t know they would be killed'],
+    correct: 0, why: 'People die for things they BELIEVE are true all the time. But almost nobody dies for a story they made up themselves and know is fake.',
+    verse: 'Acts 5:41 — they rejoiced at being counted worthy to suffer.' },
+  { letter: 'I', name: 'Inability to deny',
+    q: 'What changed the disciples from scared people hiding in a locked room into bold preachers who faced death?',
+    options: ['They got rich', 'They claimed they had seen the risen Jesus with their own eyes', 'Someone threatened them', 'They wanted attention from crowds'],
+    correct: 1, why: 'After the resurrection appearances, they went from cowards to people who could not be silenced — even by death.',
+    verse: 'John 20:19, then Acts 4:13' },
+  { letter: 'I', name: 'Inability to deny',
+    q: 'TRUE OR FALSE: Most of the original disciples died peaceful, comfortable lives at home.',
+    options: ['True', 'False'], correct: 1,
+    why: 'Tradition and early church history say most were martyred. They had everything earthly to lose and nothing to gain.',
+    verse: 'John 21:18-19 — Jesus foretells Peter\'s martyrdom.' },
+
+  // S - Shift in beliefs
+  { letter: 'S', name: 'Shift in beliefs',
+    q: 'Jewish people had worshiped on Saturday (Sabbath) for over 1,000 years. What day did early Christians switch to and why?',
+    options: ['Friday, because Jesus died on Friday', 'Sunday, because Jesus rose on Sunday', 'Monday, due to a calendar change', 'They kept worshiping on Saturday'],
+    correct: 1, why: 'Devout Jews changing their worship day is HUGE. Only something massive — like a resurrection — could cause that shift.',
+    verse: 'Acts 20:7 — believers gathered on the first day of the week.' },
+  { letter: 'S', name: 'Shift in beliefs',
+    q: 'What major Jewish practice did early Christians STOP doing after Jesus\' death and resurrection?',
+    options: ['Praying', 'Reading Scripture', 'Animal sacrifices for sins', 'Celebrating holidays'],
+    correct: 2, why: 'They believed Jesus was the final sacrifice. Stopping a 1,000+ year practice doesn\'t happen without a powerful reason.',
+    verse: 'Hebrews 10:10-12' },
+  { letter: 'S', name: 'Shift in beliefs',
+    q: 'TRUE OR FALSE: Jewish believers (who strictly believed in only ONE God) started worshiping Jesus as God.',
+    options: ['True', 'False'], correct: 0,
+    why: 'Strict monotheists worshiping a man as God? Shocking — unless they truly believed He had conquered death.',
+    verse: 'John 20:28 — "My Lord and my God!"' },
+
+  // E - Evidence for the Bible
+  { letter: 'E', name: 'Evidence for the Bible',
+    q: 'The Gospels say WOMEN were the first to find the empty tomb. Why is that actually GOOD evidence the story is true?',
+    options: ['Because women were excellent storytellers', 'In that culture, women\'s testimony wasn\'t even allowed in court — so nobody would invent this', 'Because no men were around', 'It\'s not really good evidence'],
+    correct: 1, why: 'If you\'re making up a story, you don\'t use witnesses your culture won\'t believe. This "embarrassing" detail screams authenticity.',
+    verse: 'Luke 24:1-11' },
+  { letter: 'E', name: 'Evidence for the Bible',
+    q: 'How does the New Testament compare to other ancient writings in terms of manuscript copies?',
+    options: ['Far fewer than other ancient books', 'About the same as Homer or Aristotle', 'FAR more manuscripts than any other ancient writing', 'We have zero manuscripts'],
+    correct: 2, why: 'Thousands of early manuscripts make the New Testament the best-preserved ancient document in history.',
+    verse: '2 Timothy 3:16' },
+  { letter: 'E', name: 'Evidence for the Bible',
+    q: 'Why does it matter that the Gospels were written CLOSE in time to when Jesus lived?',
+    options: ['It doesn\'t really matter', 'Eyewitnesses (friends AND enemies) were still alive and could correct false stories', 'Paper was cheaper then', 'Writers had better memories back then'],
+    correct: 1, why: 'Eyewitnesses were still around. Made-up stories would have been called out fast — but they weren\'t.',
+    verse: '1 Corinthians 15:6 — over 500 witnesses, "most of whom are still living."' },
+
+  // N - No theory works
+  { letter: 'N', name: 'No skeptic theory works',
+    q: 'SKEPTIC THEORY: "The disciples just stole the body!" What\'s a HUGE problem with this idea?',
+    options: ['The tomb wasn\'t sealed', 'Trained Roman soldiers guarded the tomb, AND people don\'t die for a lie they themselves invented', 'Nobody cared about the body', 'The disciples were really strong'],
+    correct: 1, why: 'Sneaking past armed Roman guards, then dying horrible deaths for a story you KNOW is fake? Doesn\'t add up.',
+    verse: 'Matthew 27:62-66' },
+  { letter: 'N', name: 'No skeptic theory works',
+    q: 'SKEPTIC THEORY: "Jesus didn\'t really die — He just fainted and woke up later." Why doesn\'t this work?',
+    options: ['Roman soldiers were execution experts and confirmed He was dead — plus a spear pierced His side', 'Jesus was secretly really strong', 'He had medicine with Him', 'The cross wasn\'t real'],
+    correct: 0, why: 'Roman crucifixion was brutal and certain. A half-dead, beaten man couldn\'t convince anyone He had conquered death.',
+    verse: 'John 19:33-34' },
+  { letter: 'N', name: 'No skeptic theory works',
+    q: 'SKEPTIC THEORY: "Everyone just hallucinated seeing Jesus." Why is this a weak explanation?',
+    options: ['Hallucinations are NOT contagious — groups of 500+ people don\'t share the exact same vision', 'Hallucinations don\'t exist', 'The disciples never said they saw Jesus', 'They were all sleeping'],
+    correct: 0, why: '1 Corinthians 15 says over 500 people saw Him at one time. Mass identical hallucinations are not a real thing.',
+    verse: '1 Corinthians 15:3-8' }
+];
+
+const hardQuestions = [
+  { letter: 'R', name: 'Rise of Christianity',
+    q: 'Around AD 112, Roman governor Pliny the Younger wrote to Emperor Trajan about Christians "worshiping Christ as to a god." What does this confirm?',
+    options: ['That Christians were a small forgotten group', 'That within 80 years of the cross, Christianity had spread far enough to alarm Roman officials', 'That Pliny invented Christianity', 'That Trajan was a Christian'],
+    correct: 1, why: 'Non-Christian Roman sources confirm explosive Christian growth in a hostile empire — evidence FROM the enemy.',
+    verse: 'Acts 1:8' },
+  { letter: 'R', name: 'Rise of Christianity',
+    q: 'What is the "criterion of embarrassment" in studying the rise of Christianity?',
+    options: ['Embarrassing details are usually true because nobody would invent something that makes them look bad', 'Embarrassing details should be ignored', 'It means the writers were embarrassed', 'It\'s a modern internet term'],
+    correct: 0, why: 'When a story includes humiliating details (like Peter denying Jesus three times), it points to authenticity — not invention.',
+    verse: 'Mark 14:66-72' },
+  { letter: 'R', name: 'Rise of Christianity',
+    q: 'Why is it significant that Christianity\'s central claim (a crucified Messiah) was OFFENSIVE to both Jews and Greeks?',
+    options: ['It\'s not significant', 'A movement marketed for popularity would never invent such an unappealing message — it points to truth driving the message', 'It made conversion easier', 'Greeks loved crucifixion stories'],
+    correct: 1, why: 'Crucifixion was scandalous to Jews and foolish to Greeks. Nobody invents an offensive central claim — unless it actually happened.',
+    verse: '1 Corinthians 1:23' },
+
+  { letter: 'I', name: 'Inability to deny',
+    q: 'James, the brother of Jesus, was SKEPTICAL of Jesus during His ministry. What happened to James after the resurrection?',
+    options: ['He stayed a skeptic', 'He became a leader of the Jerusalem church and was martyred for his faith', 'He moved to Rome', 'Nothing changed'],
+    correct: 1, why: 'A skeptical brother becoming a martyred church leader is powerful evidence. Something convinced him — and 1 Corinthians 15:7 says Jesus appeared to him.',
+    verse: 'Galatians 1:19; 1 Cor 15:7' },
+  { letter: 'I', name: 'Inability to deny',
+    q: 'Saul of Tarsus actively PERSECUTED Christians, then became the Apostle Paul. Why is his transformation strong evidence?',
+    options: ['He was always secretly Christian', 'A determined enemy with everything to lose suddenly suffering for the gospel suggests he encountered something real', 'He wanted money', 'He was tricked'],
+    correct: 1, why: 'Paul lost status, safety, and ultimately his life. Enemy conversions like his are some of the strongest evidence in history.',
+    verse: 'Acts 9:1-22' },
+  { letter: 'I', name: 'Inability to deny',
+    q: 'What\'s the difference between a martyr who dies for a SECONDHAND belief vs. a martyr who dies for what they personally witnessed?',
+    options: ['No difference', 'Secondhand martyrs might be sincerely wrong; firsthand witnesses would KNOW if they were lying', 'Secondhand is stronger evidence', 'Both types are equally weak'],
+    correct: 1, why: 'Modern martyrs may be sincerely mistaken. But the disciples were FIRSTHAND witnesses — they\'d know if it was a lie.',
+    verse: '2 Peter 1:16' },
+
+  { letter: 'S', name: 'Shift in beliefs',
+    q: 'In Jewish theology, the Messiah was NEVER expected to die and rise. So why did early Jews suddenly start preaching exactly that?',
+    options: ['They misunderstood Jewish Scripture', 'They re-read Scripture AFTER witnessing the resurrection and saw it had been predicted all along', 'They abandoned Judaism completely', 'It was a political move'],
+    correct: 1, why: 'They didn\'t expect a dying Messiah — until they saw Him risen. THEN passages like Isaiah 53 made sense.',
+    verse: 'Luke 24:25-27' },
+  { letter: 'S', name: 'Shift in beliefs',
+    q: 'The early creed in 1 Corinthians 15:3-7 (about Jesus\' death, burial, and resurrection) is dated by scholars to within HOW LONG after the crucifixion?',
+    options: ['200 years', '100 years', '50 years', '2-5 years — almost immediately'],
+    correct: 3, why: 'Scholars (even non-Christian ones) date this creed to within a few years of the cross. Legend doesn\'t form that fast — it\'s eyewitness era.',
+    verse: '1 Corinthians 15:3-7' },
+  { letter: 'S', name: 'Shift in beliefs',
+    q: 'Why did early Christians replace Passover with the Lord\'s Supper (Communion)?',
+    options: ['They forgot about Passover', 'They saw Jesus as the true Passover Lamb whose death and resurrection fulfilled the meaning', 'They didn\'t like lamb', 'It was cheaper'],
+    correct: 1, why: 'A foundational Jewish festival being reinterpreted around a crucified man is a seismic theological shift.',
+    verse: '1 Corinthians 5:7' },
+
+  { letter: 'E', name: 'Evidence for the Bible',
+    q: 'How many Greek New Testament manuscripts have been discovered, approximately?',
+    options: ['About 100', 'About 500', 'About 1,500', 'Over 5,800'],
+    correct: 3, why: 'Over 5,800 Greek manuscripts plus 25,000+ in other languages. Compare that to Homer\'s Iliad (~1,800) — the NT is in a league of its own.',
+    verse: '1 Peter 1:25' },
+  { letter: 'E', name: 'Evidence for the Bible',
+    q: 'What does it mean that the Gospels contain "undesigned coincidences"?',
+    options: ['Random unimportant facts', 'Small details where one Gospel accidentally answers a question raised in another — pointing to independent eyewitness accounts', 'Mistakes the writers missed', 'Identical word-for-word copying'],
+    correct: 1, why: 'Like puzzle pieces from different witnesses that fit together perfectly. Conspiracy stories don\'t have these — real testimony does.',
+    verse: 'John 21:24' },
+  { letter: 'E', name: 'Evidence for the Bible',
+    q: 'Roman historians Tacitus and Josephus (NON-Christian sources) confirm which facts about Jesus?',
+    options: ['Nothing about Jesus at all', 'He existed, was crucified under Pontius Pilate, and His followers worshiped Him as risen', 'Only that He was a teacher', 'That He didn\'t exist'],
+    correct: 1, why: 'Hostile non-Christian sources confirm the core historical facts. You can\'t dismiss Jesus as a myth.',
+    verse: 'Luke 1:1-4' },
+
+  { letter: 'N', name: 'No skeptic theory works',
+    q: 'The "Swoon Theory" (Jesus survived crucifixion) was famously dismissed by skeptic David Strauss in the 1800s. What was his main point?',
+    options: ['Jesus was never crucified', 'A half-dead, mutilated, weak man could NOT convince disciples that He was the conquering risen Lord of life', 'Crucifixion was usually survived', 'Romans were bad at executions'],
+    correct: 1, why: 'Even hardcore skeptics rejected the Swoon Theory. A barely-alive Jesus inspires pity, not worship.',
+    verse: 'John 20:27-28' },
+  { letter: 'N', name: 'No skeptic theory works',
+    q: 'Why does the "Wrong Tomb Theory" (everyone went to the wrong tomb) fail?',
+    options: ['The tomb was hidden', 'Joseph of Arimathea, the women, AND the Roman/Jewish authorities all knew the correct location — they would have just gone to the right one', 'There was only one tomb in Jerusalem', 'It actually works fine'],
+    correct: 1, why: 'Too many parties knew exactly where the tomb was. Disproving the resurrection would have been as simple as a short walk.',
+    verse: 'Matthew 27:60-66' },
+  { letter: 'N', name: 'No skeptic theory works',
+    q: 'What is the "Minimal Facts" approach used by scholars like Gary Habermas?',
+    options: ['Ignoring facts', 'Starting only with historical facts that even SKEPTICAL scholars accept, and showing those alone require the resurrection', 'Inventing new facts', 'Only using Christian sources'],
+    correct: 1, why: 'Even using only facts agreed on by skeptical scholars (death, empty tomb, appearances, transformation of disciples), the resurrection is still the best explanation.',
+    verse: '1 Corinthians 15:14' }
+];
+
+let questions = easyQuestions;
+let difficulty = 'easy';
+let state = { idx: 0, score: 0, answered: false };
+const ranks = ['Rookie', 'Investigator', 'Detective', 'Senior Detective', 'Case Closer'];
+
+function setDifficulty(d) {
+  difficulty = d;
+  questions = d === 'easy' ? easyQuestions : hardQuestions;
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-diff="${d}"]`).classList.add('active');
+}
+
+function startGame() {
+  state = { idx: 0, score: 0, answered: false };
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('end-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'block';
+  renderEvidence();
+  renderQuestion();
+}
+
+function renderEvidence() {
+  const letters = ['R','I','S','E','N'];
+  const words = ['Rise','Inability','Shift','Evidence','No theory'];
+  const html = letters.map((L, i) => {
+    const earned = state.score >= (i+1)*3;
+    return `<div class="letter-card ${earned ? 'earned' : ''}">
+      <div class="big-letter">${L}</div>
+      <div class="word">${earned ? '✓ ' + words[i] : words[i]}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('evidence-display').innerHTML = html;
+  const rankIdx = Math.min(Math.floor(state.score/3), 4);
+  document.getElementById('rank').textContent = ranks[rankIdx];
+  document.getElementById('score').textContent = state.score;
+  document.getElementById('q-num').textContent = `${state.idx+1}/${questions.length}`;
+  document.getElementById('progress').style.width = `${(state.idx/questions.length)*100}%`;
+}
+
+function renderQuestion() {
+  const q = questions[state.idx];
+  state.answered = false;
+  const badge = document.getElementById('letter-badge');
+  badge.textContent = `${q.letter} — ${q.name}`;
+  badge.className = `badge badge-${q.letter}`;
+  document.getElementById('question-text').textContent = q.q;
+  document.getElementById('feedback').classList.remove('show');
+  document.getElementById('next-btn').style.display = 'none';
+
+  const optsEl = document.getElementById('options');
+  optsEl.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.textContent = opt;
+    btn.onclick = () => answer(i);
+    optsEl.appendChild(btn);
+  });
+}
+
+function answer(i) {
+  if (state.answered) return;
+  state.answered = true;
+  const q = questions[state.idx];
+  const correct = i === q.correct;
+  if (correct) state.score++;
+  const btns = document.querySelectorAll('.option-btn');
+  btns.forEach((b, idx) => {
+    b.disabled = true;
+    if (idx === q.correct) b.classList.add('correct');
+    else if (idx === i && !correct) b.classList.add('wrong');
+  });
+  const fb = document.getElementById('feedback');
+  fb.innerHTML = `<strong>${correct ? '✓ Correct!' : '✗ Not quite.'}</strong> ${q.why}` +
+    (q.verse ? `<div class="verse">📖 ${q.verse}</div>` : '');
+  fb.classList.add('show');
+  renderEvidence();
+  const next = document.getElementById('next-btn');
+  next.style.display = 'block';
+  next.textContent = state.idx === questions.length - 1 ? 'See final verdict →' : 'Next question →';
+}
+
+function nextQuestion() {
+  state.idx++;
+  if (state.idx >= questions.length) endGame();
+  else renderQuestion();
+}
+
+function endGame() {
+  document.getElementById('game-screen').style.display = 'none';
+  document.getElementById('end-screen').style.display = 'block';
+  const pct = state.score / questions.length;
+  let title, sub, rank, emoji, verse;
+  if (pct === 1) {
+    emoji = '🏆'; title = 'CASE CLOSED!';
+    sub = 'Every piece of evidence solved. You\'ve mastered R.I.S.E.N.';
+    rank = 'Rank: Case Closer';
+    verse = '"He is not here; He has risen, just as He said." — Matthew 28:6';
+  } else if (pct >= 0.8) {
+    emoji = '🥇'; title = 'STRONG CASE!';
+    sub = 'You\'ve built a powerful argument for the resurrection.';
+    rank = 'Rank: Senior Detective';
+    verse = '"Be strong in the grace that is in Christ Jesus." — 2 Timothy 2:1';
+  } else if (pct >= 0.6) {
+    emoji = '🥈'; title = 'SOLID WORK!';
+    sub = 'You know the basics — review what you missed and run the case again.';
+    rank = 'Rank: Detective';
+    verse = '"Grow in grace and knowledge of our Lord and Savior Jesus Christ." — 2 Peter 3:18';
+  } else if (pct >= 0.4) {
+    emoji = '🥉'; title = 'GOOD START';
+    sub = 'Keep digging — every detective needs practice.';
+    rank = 'Rank: Investigator';
+    verse = '"Seek and you will find." — Matthew 7:7';
+  } else {
+    emoji = '🔍'; title = 'JUST GETTING STARTED';
+    sub = 'Review the R.I.S.E.N. framework and come back to crack the case.';
+    rank = 'Rank: Rookie';
+    verse = '"Study to show yourself approved." — 2 Timothy 2:15';
+  }
+  document.getElementById('trophy-emoji').textContent = emoji;
+  document.getElementById('end-title').textContent = title;
+  document.getElementById('end-subtitle').textContent = sub;
+  document.getElementById('final-score').textContent = `${state.score} / ${questions.length}`;
+  document.getElementById('final-rank').textContent = rank;
+  document.getElementById('end-verse').textContent = verse;
+}
+
+function resetGame() {
+  document.getElementById('end-screen').style.display = 'none';
+  document.getElementById('start-screen').style.display = 'block';
+}
+</script>
+</body>
+</html>
